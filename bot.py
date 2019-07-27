@@ -10,6 +10,13 @@ from datetime import datetime, timedelta
 
 newschan = None
 gamefeedchan = None
+logschan = None
+
+logchanid = "604740251889696828"
+gamefeedid = "604420646184943617"
+newsid = "603390108506521635"
+serverid = "603327627742412800"
+welcomeid = "604497195500306447"
 
 client = discord.Client()
 seennewbies = dict()
@@ -138,12 +145,16 @@ def periodicTasks():
         else:
             pass
 
+# BEGIN EVENT HANDLERS
+
+# When a user connects, send a welcome message.
 @client.event
 async def on_member_join(member):
-    welcomechan = server.get_channel("604497195500306447")
+    welcomechan = server.get_channel(welcomeid)
     msg = "Hello and welcome to the Imperian Discord server, {}! Please take a quick look at the first pinned message in the announcements channel for the ground rules. Feel free to set your nick to your character's name if you'd like, but you're under no obligation to do so!".format(member.mention)
     await client.send_message(welcomechan, msg)
 
+# Set up globals on connection
 @client.event
 async def on_ready():
     global newschan
@@ -153,12 +164,28 @@ async def on_ready():
     global server
     # Set up our objects
     if newschan is None:
-        server = client.get_server("603327627742412800")
-        newschan = server.get_channel("603390108506521635")
-        gamefeedchan = server.get_channel("604420646184943617")
+        server = client.get_server(serverid)
+        newschan = server.get_channel(newsid)
+        gamefeedchan = server.get_channel(gamefeedid)
+        logschan = server.get_channel(logchanid)
     await client.change_presence(game=discord.Game(name="Imperian"))
     print("<hacker voice>I'm in</hacker voice>")
     print(client.user)
+
+# track edits made to posts for moderation
+@client.event
+async def on_message_edit(before, after):
+    global logschan
+    msg = "**{0.author}** edited their message in {0.channel.mention}:\nOld:\n{0.content}\n\nNew:\n{1.content}"
+    await client.send_message(logschan, msg.format(before, after))
+
+# track deletions made to posts for moderation
+@client.event
+async def on_message_delete(message):
+    msg = "**{0.author}** deleted their message in {0.channel.mention}({0.channel.id}):\n\n{0.content}"
+    await client.send_message(logschan, msg.format(message))
+
+# END EVENT HANDLERS
 
 # load current news limits
 newssections = dict()
