@@ -9,6 +9,10 @@ This bot was created for use in the [Imperian](https://www.imperian.com) Discord
  - This bot polls the News API endpoint to post all new Announce posts in an appropriate channel in Discord
  - This bot polls the Gamefeed API endpoint to post all Gamefeed events in an appropriate channel in Discord
 
+### Welcome Message
+
+ - A welcome message directing new members to the rules sticky is posted when a new member joins the server
+
 ### Commands
 
  - None, at this time - the bot purely polls Imperian's APIs and posts some information in various Discord channels.
