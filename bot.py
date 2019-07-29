@@ -199,7 +199,6 @@ async def tweet(ctx, *args):
     if len(tweet) > 280:
         await ctx.send("Tweet too long. Keep it under 280 characters, Dickens.")
         return
-    print(dir(ctx))
     twitreturn = twit.post_tweet(tweet)
     await client.send_message(ctx.message.channel, "Tweet posted: {}".format(twitreturn.text))
 
