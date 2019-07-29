@@ -1,3 +1,4 @@
+from discord.ext import commands
 import discord
 import os
 import urllib.request
@@ -7,6 +8,9 @@ import pickle
 import asyncio
 import time
 from datetime import datetime, timedelta
+
+# utility functions
+import twit
 
 newschan = None
 gamefeedchan = None
@@ -18,7 +22,7 @@ newsid = "603390108506521635"
 serverid = "603327627742412800"
 welcomeid = "604497195500306447"
 
-client = discord.Client()
+client = commands.Bot(command_prefix="!")
 seennewbies = dict()
 seenids = dict()
 server = None
@@ -186,6 +190,20 @@ async def on_message_delete(message):
     await client.send_message(logschan, msg.format(message))
 
 # END EVENT HANDLERS
+
+# BEGIN COMMAND HANDLERS
+@client.command(pass_context=True)
+@commands.has_role('Admin')
+async def tweet(ctx, *args):
+    tweet = ' '.join(args)
+    if len(tweet) > 280:
+        await ctx.send("Tweet too long. Keep it under 280 characters, Dickens.")
+        return
+    print(dir(ctx))
+    twitreturn = twit.post_tweet(tweet)
+    await client.send_message(ctx.message.channel, "Tweet posted: {}".format(twitreturn.text))
+
+# END COMMAND HANDLERS
 
 # load current news limits
 newssections = dict()
