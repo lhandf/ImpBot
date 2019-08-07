@@ -15,12 +15,16 @@ import twit
 newschan = None
 gamefeedchan = None
 logschan = None
+imperianchan = None
 
 logchanid = "604740251889696828"
 gamefeedid = "604420646184943617"
 newsid = "603390108506521635"
 serverid = "603327627742412800"
 welcomeid = "604497195500306447"
+imperianid = "603332662769221674"
+
+lastvote = None
 
 client = commands.Bot(command_prefix="!")
 seennewbies = dict()
@@ -65,6 +69,13 @@ def periodicTasks():
     global seennewbies
     loop = asyncio.get_event_loop()  
     loop.call_later(5, periodicTasks)
+
+    # more than 12 hours since the last vote reminder?
+    if datetime.now() - lastvote["time"] > timedelta(hours=12):
+        asyncio.ensure_future(client.send_message(imperianchan, "Have you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
+        lastvote["time"] = datetime.now()
+        with open("lastvote.pickle", "wb") as fh:
+            pickle.dump(lastvote, fh)
 
     # Fetch the imperian gamefeed and output it
     outstr = ""
@@ -166,12 +177,14 @@ async def on_ready():
     global logschan
     global gamefeedchan
     global server
+    global imperianchan
     # Set up our objects
     if newschan is None:
         server = client.get_server(serverid)
         newschan = server.get_channel(newsid)
         gamefeedchan = server.get_channel(gamefeedid)
         logschan = server.get_channel(logchanid)
+        imperianchan = server.get_channel(imperianid)
     await client.change_presence(game=discord.Game(name="Imperian"))
     print("<hacker voice>I'm in</hacker voice>")
     print(client.user)
@@ -238,6 +251,15 @@ try:
 except Exception as e:
     print("Failed to load seennewbies. Initializing dict.")
     seennewbies = dict()
+
+# load last vote time
+try:
+    with open("lastvote.pickle", "rb") as fh:
+        lastvote = pickle.load(fh)
+except Exception as e:
+    print("Failed to load lastvote time. Setting it to 12 hours ago")
+    lastvote = dict()
+    lastvote["time"] = datetime.now() - timedelta(hours=12)
 
 loop = asyncio.get_event_loop()
 loop.call_later(5, periodicTasks)
