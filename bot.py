@@ -23,6 +23,8 @@ newsid = "603390108506521635"
 serverid = "603327627742412800"
 welcomeid = "604497195500306447"
 imperianid = "603332662769221674"
+botcommandid = "616084613588189268"
+moderatorchanid = "604743543403053105"
 
 lastvote = None
 
@@ -72,7 +74,8 @@ def periodicTasks():
 
     # more than 12 hours since the last vote reminder?
     if datetime.now() - lastvote["time"] > timedelta(hours=12):
-        asyncio.ensure_future(client.send_message(imperianchan, "Have you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
+        for person in lastvote["subscribed"]:
+            asyncio.ensure_future(client.send_message(person, "You're subscribed for Imperian vote reminders!\nHave you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
         lastvote["time"] = datetime.now()
         with open("lastvote.pickle", "wb") as fh:
             pickle.dump(lastvote, fh)
@@ -205,15 +208,48 @@ async def on_message_delete(message):
 # END EVENT HANDLERS
 
 # BEGIN COMMAND HANDLERS
-@client.command(pass_context=True)
+
+# Command filter functions
+def is_botcommands_channel(ctx):
+    return ctx.message.channel.id in [botcommandid, moderatorchanid]
+
+@client.command(pass_context=True, hidden=True)
 @commands.has_role('Admin')
 async def tweet(ctx, *args):
+    """ Send a tweet to the Imperian twitter. Admin only. """
     tweet = ' '.join(args)
     if len(tweet) > 280:
         await ctx.send("Tweet too long. Keep it under 280 characters, Dickens.")
         return
     twitreturn = twit.post_tweet(tweet)
     await client.send_message(ctx.message.channel, "Tweet posted: {}".format(twitreturn.text))
+
+@client.command(pass_context=True)
+@commands.check(is_botcommands_channel)
+async def sub(ctx, *args):
+    """ Subscribe to something. Current options: vote - subscribe to vote reminder PMs """
+    if args[0] == "vote":
+        if ctx.message.author in lastvote["subscribed"]:
+            await client.send_message(ctx.message.channel, "You're already signed up for vote reminders.")
+        else:
+            # Add person to the list of folks that get vote reminders
+            lastvote["subscribed"].add(ctx.message.author)
+            with open("lastvote.pickle", "wb") as fh:
+                pickle.dump(lastvote, fh)
+            await client.send_message(ctx.message.channel, "Ok! You're signed up for vote reminders.")
+
+@client.command(pass_context=True)
+@commands.check(is_botcommands_channel)
+async def unsub(ctx, *args):
+    """ Unsubscribe from something. Current options: vote - subscribe to vote reminder PMs """
+    if args[0] == "vote":
+        if ctx.message.author in lastvote["subscribed"]:
+            lastvote["subscribed"].discard(ctx.message.author)
+            with open("lastvote.pickle", "wb") as fh:
+                pickle.dump(lastvote, fh)
+            await client.send_message(ctx.message.channel, "Ok! You're no longer signed up for vote reminders.")
+        else:
+            await client.send_message(ctx.message.channel, "You're not signed up for vote reminders!")
 
 # END COMMAND HANDLERS
 
@@ -256,10 +292,16 @@ except Exception as e:
 try:
     with open("lastvote.pickle", "rb") as fh:
         lastvote = pickle.load(fh)
+        try:
+            lastvote['subscribed']
+        except:
+            # Backwards compat - if lastvote exists but subscribed list doesn't, make it
+            lastvote['subscribed'] = set()
 except Exception as e:
     print("Failed to load lastvote time. Setting it to 12 hours ago")
     lastvote = dict()
     lastvote["time"] = datetime.now() - timedelta(hours=12)
+    lastvote["subscribed"] = set()
 
 loop = asyncio.get_event_loop()
 loop.call_later(5, periodicTasks)
