@@ -10,7 +10,7 @@ This bot was created for use in the [Imperian](https://www.imperian.com) Discord
  - This bot polls the Gamefeed API endpoint to post all Gamefeed events in an appropriate channel in Discord
 
 ### Vote Reminder
- - The bot will remind server members to vote on TMC every 12 hours (via a message to the #imperian channel)
+ - The bot will remind server members to vote on TMC every 12 hours (via a DM to anyone that has subscribed)
 
 ### Welcome Message
 
