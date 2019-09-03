@@ -18,5 +18,6 @@ This bot was created for use in the [Imperian](https://www.imperian.com) Discord
 
 ### Commands
 
- - None, at this time - the bot purely polls Imperian's APIs and posts some information in various Discord channels.
+ - !sub   - Lets you subscribe to something (current option: "vote" to sign up for periodic DMs with vote reminders)
+ - !unsub - Lets you UNsubscribe to something (current option: "vote" to sign up for periodic DMs with vote reminders)
 
