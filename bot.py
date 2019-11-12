@@ -15,14 +15,14 @@ import twit
 newschan = None
 gamefeedchan = None
 logschan = None
-imperianchan = None
+generalchan = None
 
 logchanid = "604740251889696828"
 gamefeedid = "604420646184943617"
 newsid = "603390108506521635"
 serverid = "603327627742412800"
 welcomeid = "604497195500306447"
-imperianid = "603332662769221674"
+generalid = "603327627742412802"
 botcommandid = "616084613588189268"
 moderatorchanid = "604743543403053105"
 
@@ -148,6 +148,7 @@ def periodicTasks():
                 while num <= section["total"]:
                     try:
                         print("Posting {} {}".format(section["name"], num))
+                        asyncio.ensure_future(client.send_message(generalchan, "New news post posted in #announce!"))
                         asyncio.ensure_future(client.send_message(newschan, "New news post posted!"))
                         thesection = section["name"]
                         outstr = newshelper(thesection, num)
@@ -180,14 +181,14 @@ async def on_ready():
     global logschan
     global gamefeedchan
     global server
-    global imperianchan
+    global generalchan 
     # Set up our objects
     if newschan is None:
         server = client.get_server(serverid)
         newschan = server.get_channel(newsid)
         gamefeedchan = server.get_channel(gamefeedid)
         logschan = server.get_channel(logchanid)
-        imperianchan = server.get_channel(imperianid)
+        generalchan = server.get_channel(generalid)
     await client.change_presence(game=discord.Game(name="Imperian"))
     print("<hacker voice>I'm in</hacker voice>")
     print(client.user)
