@@ -225,6 +225,24 @@ async def tweet(ctx, *args):
     twitreturn = twit.post_tweet(tweet)
     await client.send_message(ctx.message.channel, "Tweet posted: {}".format(twitreturn.text))
 
+@client.command(pass_context=True, hidden=True)
+@commands.has_role('Admin')
+async def idea(ctx, *args):
+    """ Give a reminder on how to submit an idea """
+    await client.send_message(ctx.message.channel, "That's a good idea! Please submit it in-game using the IDEA command. If you're unsure how to use that command, please read `HELP IDEAS` in-game, or here: https://www.imperian.com/game-help/?id=72")
+
+@client.command(pass_context=True, hidden=True)
+@commands.has_role('Admin')
+async def bug(ctx, *args):
+    """ Give a reminder on how to file bugs """
+    await client.send_message(ctx.message.channel, "If you think you've found a bug in Imperian, please file it in-game using the BUG command! Please include as much context as possible! For more information on filing bugs, read `HELP BUGS` in-game, or here: https://www.imperian.com/game-help/?id=72")
+
+@client.command(pass_context=True, hidden=True)
+@commands.has_role('Admin')
+async def issues(ctx, *args):
+    """ Give a reminder about issues """
+    await client.send_message(ctx.message.channel, "Discussion of issues is not permitted on this discord (just like it isn't allowed on the forums). If you need to file an issue, please do so in-game and read `HELP ISSUES` and `HELP USINGISSUES`. `HELP ISSUES`: https://www.imperian.com/game-help/?what=customer-service `HELP USINGISSUES`: https://www.imperian.com/game-help/?id=510")
+
 @client.command(pass_context=True)
 @commands.check(is_botcommands_channel)
 async def sub(ctx, *args):
