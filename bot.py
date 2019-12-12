@@ -243,6 +243,8 @@ async def issues(ctx, *args):
     """ Give a reminder about issues """
     await client.send_message(ctx.message.channel, "Discussion of issues is not permitted on this discord (just like it isn't allowed on the forums). If you need to file an issue, please do so in-game and read `HELP ISSUES` and `HELP USINGISSUES`. `HELP ISSUES`: https://www.imperian.com/game-help/?what=customer-service `HELP USINGISSUES`: https://www.imperian.com/game-help/?id=510")
 
+
+# Subscribe to something (such as vote reminders)
 @client.command(pass_context=True)
 @commands.check(is_botcommands_channel)
 async def sub(ctx, *args):
@@ -269,6 +271,29 @@ async def unsub(ctx, *args):
             await client.send_message(ctx.message.channel, "Ok! You're no longer signed up for vote reminders.")
         else:
             await client.send_message(ctx.message.channel, "You're not signed up for vote reminders!")
+
+# random utility commands
+@client.command(pass_context=True)
+@commands.check(is_botcommands_channel)
+async def ftoc(ctx, *args):
+    """ Convert degrees F to degress C """
+    try:
+        f = int(args[0])
+        c = (f - 32) * 5/9
+        await client.send_message(ctx.message.channel, "{} degrees F is {} degrees C".format(f, c))
+    except:
+        await client.send_message(ctx.message.channel, "Invalid input.")
+
+
+async def ctof(ctx, *args):
+    try:
+        c = int(args[0])
+        f = c * 9/5 + 32
+        await client.send_message(ctx.message.channel, "{} degrees C is {} degrees F".format(c, f))
+    except:
+        await client.send_message(ctx.message.channel, "Invalid input.")
+
+
 
 # END COMMAND HANDLERS
 
