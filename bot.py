@@ -312,7 +312,7 @@ async def corgme(ctx, *args):
     except Exception as e:
         await client.send_message(ctx.message.channel, "Exception occurred!")
         return
-    await client.send_message("__Title__: {}\n{}".format(post.title, post.url))
+    await client.send_message(ctx.message.channel, "__Title__: {}\n{}".format(post.title, post.url))
 
 # END COMMAND HANDLERS
 
