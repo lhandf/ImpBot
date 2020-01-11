@@ -11,11 +11,13 @@ from datetime import datetime, timedelta
 
 # utility functions
 import twit
+import redditfetch
 
 newschan = None
 gamefeedchan = None
 logschan = None
 generalchan = None
+furryfriendschan = None
 
 logchanid = "604740251889696828"
 gamefeedid = "604420646184943617"
@@ -25,6 +27,7 @@ welcomeid = "604497195500306447"
 generalid = "603327627742412802"
 botcommandid = "616084613588189268"
 moderatorchanid = "604743543403053105"
+furryfriendschanid = "654713808840818708"
 
 lastvote = None
 
@@ -189,6 +192,7 @@ async def on_ready():
         gamefeedchan = server.get_channel(gamefeedid)
         logschan = server.get_channel(logchanid)
         generalchan = server.get_channel(generalid)
+        furryfriendschan = server.get_channel(furryfriendschanid)
     await client.change_presence(game=discord.Game(name="Imperian"))
     print("<hacker voice>I'm in</hacker voice>")
     print(client.user)
@@ -213,6 +217,9 @@ async def on_message_delete(message):
 # Command filter functions
 def is_botcommands_channel(ctx):
     return ctx.message.channel.id in [botcommandid, moderatorchanid]
+
+def is_pets_channel(ctx):
+    return ctx.message.channel.id == furryfriendschanid
 
 @client.command(pass_context=True, hidden=True)
 @commands.has_role('Admin')
@@ -284,8 +291,10 @@ async def ftoc(ctx, *args):
     except:
         await client.send_message(ctx.message.channel, "Invalid input.")
 
-
+@client.command(pass_context=True)
+@commands.check(is_botcommands_channel)
 async def ctof(ctx, *args):
+    """ Convert degrees C to degress F """
     try:
         c = int(args[0])
         f = c * 9/5 + 32
@@ -293,7 +302,17 @@ async def ctof(ctx, *args):
     except:
         await client.send_message(ctx.message.channel, "Invalid input.")
 
-
+# fun things
+@client.command(pass_context=True)
+@commands.check(is_pets_channel)
+async def corgme(ctx, *args):
+    """ Fetch a random post from r/corgis r/corgi r/corgibutts r/babycorgis or r/corgigifs """
+    try:
+        post = redditfetch.random_from_several(["corgis", "corgi", "corgibutts", "babycorgis", "corgigifs"])
+    except Exception as e:
+        await client.send_message(ctx.message.channel, "Exception occurred!")
+        return
+    await client.send_message("__Title__: {}\n{}".format(post.title, post.url))
 
 # END COMMAND HANDLERS
 
