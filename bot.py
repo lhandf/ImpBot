@@ -306,7 +306,7 @@ async def ctof(ctx, *args):
 @client.command(pass_context=True)
 @commands.check(is_pets_channel)
 async def corgme(ctx, *args):
-    """ Fetch a random post from r/corgis r/corgi r/corgibutts r/babycorgis or r/corgigifs """
+    """ Fetch a random post from r/corgis r/corgi r/corgibutts r/babycorgis or r/corgigifs. Restricted to the furryfriends channel """
     try:
         post = redditfetch.random_from_several(["corgis", "corgi", "corgibutts", "babycorgis", "corgigifs"])
     except Exception as e:
