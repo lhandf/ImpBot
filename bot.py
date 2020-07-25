@@ -19,15 +19,15 @@ logschan = None
 generalchan = None
 furryfriendschan = None
 
-logchanid = "604740251889696828"
-gamefeedid = "604420646184943617"
-newsid = "603390108506521635"
-serverid = "603327627742412800"
-welcomeid = "604497195500306447"
-generalid = "603327627742412802"
-botcommandid = "616084613588189268"
-moderatorchanid = "604743543403053105"
-furryfriendschanid = "654713808840818708"
+logchanid = 604740251889696828
+gamefeedid = 604420646184943617
+newsid = 603390108506521635
+serverid = 603327627742412800
+welcomeid = 604497195500306447
+generalid = 603327627742412802
+botcommandid = 616084613588189268
+moderatorchanid = 604743543403053105
+furryfriendschanid = 654713808840818708
 
 lastvote = None
 
@@ -78,7 +78,7 @@ def periodicTasks():
     # more than 12 hours since the last vote reminder?
     if datetime.now() - lastvote["time"] > timedelta(hours=12):
         for person in lastvote["subscribed"]:
-            asyncio.ensure_future(client.send_message(person, "You're subscribed for Imperian vote reminders!\nHave you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
+            asyncio.ensure_future(person.send("You're subscribed for Imperian vote reminders!\nHave you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
         lastvote["time"] = datetime.now()
         with open("lastvote.pickle", "wb") as fh:
             pickle.dump(lastvote, fh)
@@ -123,7 +123,7 @@ def periodicTasks():
                     if skip:
                         continue
                     desc = event['description']
-                    asyncio.ensure_future(client.send_message(gamefeedchan, "{}: {}".format(event['date'], desc)))
+                    asyncio.ensure_future(gamefeedchan.send("{}: {}".format(event['date'], desc)))
 
             with open("seennewbies.pickle", "wb") as fh:
                 pickle.dump(seennewbies, fh)
@@ -151,12 +151,12 @@ def periodicTasks():
                 while num <= section["total"]:
                     try:
                         print("Posting {} {}".format(section["name"], num))
-                        asyncio.ensure_future(client.send_message(generalchan, "New news post posted in #announce!"))
-                        asyncio.ensure_future(client.send_message(newschan, "New news post posted!"))
+                        asyncio.ensure_future(generalchan.send("New news post posted in #announce!"))
+                        asyncio.ensure_future(newschan.send("New news post posted!"))
                         thesection = section["name"]
                         outstr = newshelper(thesection, num)
                         for i in range(0, len(outstr), 2000):
-                            asyncio.ensure_future(client.send_message(newschan, outstr[i:i+2000]))
+                            asyncio.ensure_future(newschan.send(outstr[i:i+2000]))
                         num += 1
                         newssections[section["name"]] = num - 1
                         with open("lastnews.pickle", "wb") as fh:
@@ -174,7 +174,7 @@ def periodicTasks():
 async def on_member_join(member):
     welcomechan = server.get_channel(welcomeid)
     msg = "Hello and welcome to the Imperian Discord server, {}! Please take a quick look at the first pinned message in the announcements channel for the ground rules. Feel free to set your nick to your character's name if you'd like, but you're under no obligation to do so!".format(member.mention)
-    await client.send_message(welcomechan, msg)
+    await welcomechan.send(msg)
 
 # Set up globals on connection
 @client.event
@@ -187,13 +187,13 @@ async def on_ready():
     global generalchan 
     # Set up our objects
     if newschan is None:
-        server = client.get_server(serverid)
+        server = client.get_guild(serverid)
         newschan = server.get_channel(newsid)
         gamefeedchan = server.get_channel(gamefeedid)
         logschan = server.get_channel(logchanid)
         generalchan = server.get_channel(generalid)
         furryfriendschan = server.get_channel(furryfriendschanid)
-    await client.change_presence(game=discord.Game(name="Imperian"))
+    await client.change_presence(activity=discord.Game(name="Imperian"))
     print("<hacker voice>I'm in</hacker voice>")
     print(client.user)
 
@@ -202,13 +202,13 @@ async def on_ready():
 async def on_message_edit(before, after):
     global logschan
     msg = "**{0.author}** edited their message in {0.channel.mention}:\nOld:\n{0.content}\n\nNew:\n{1.content}"
-    await client.send_message(logschan, msg.format(before, after))
+    await logschan.send(msg.format(before, after))
 
 # track deletions made to posts for moderation
 @client.event
 async def on_message_delete(message):
     msg = "**{0.author}** deleted their message in {0.channel.mention}({0.channel.id}):\n\n{0.content}"
-    await client.send_message(logschan, msg.format(message))
+    await logschan.send(msg.format(message))
 
 # END EVENT HANDLERS
 
@@ -230,25 +230,25 @@ async def tweet(ctx, *args):
         await ctx.send("Tweet too long. Keep it under 280 characters, Dickens.")
         return
     twitreturn = twit.post_tweet(tweet)
-    await client.send_message(ctx.message.channel, "Tweet posted: {}".format(twitreturn.text))
+    await ctx.send("Tweet posted: {}".format(twitreturn.text))
 
 @client.command(pass_context=True, hidden=True)
 @commands.has_role('Admin')
 async def idea(ctx, *args):
     """ Give a reminder on how to submit an idea """
-    await client.send_message(ctx.message.channel, "That's a good idea! Please submit it in-game using the IDEA command. If you're unsure how to use that command, please read `HELP IDEAS` in-game, or here: https://www.imperian.com/game-help/?id=72")
+    await ctx.send("That's a good idea! Please submit it in-game using the IDEA command. If you're unsure how to use that command, please read `HELP IDEAS` in-game, or here: https://www.imperian.com/game-help/?id=72")
 
 @client.command(pass_context=True, hidden=True)
 @commands.has_role('Admin')
 async def bug(ctx, *args):
     """ Give a reminder on how to file bugs """
-    await client.send_message(ctx.message.channel, "If you think you've found a bug in Imperian, please file it in-game using the BUG command! Please include as much context as possible! For more information on filing bugs, read `HELP BUGS` in-game, or here: https://www.imperian.com/game-help/?id=72")
+    await ctx.send("If you think you've found a bug in Imperian, please file it in-game using the BUG command! Please include as much context as possible! For more information on filing bugs, read `HELP BUGS` in-game, or here: https://www.imperian.com/game-help/?id=72")
 
 @client.command(pass_context=True, hidden=True)
 @commands.has_role('Admin')
 async def issues(ctx, *args):
     """ Give a reminder about issues """
-    await client.send_message(ctx.message.channel, "Discussion of issues is not permitted on this discord (just like it isn't allowed on the forums). If you need to file an issue, please do so in-game and read `HELP ISSUES` and `HELP USINGISSUES`. `HELP ISSUES`: https://www.imperian.com/game-help/?what=customer-service `HELP USINGISSUES`: https://www.imperian.com/game-help/?id=510")
+    await ctx.send("Discussion of issues is not permitted on this discord (just like it isn't allowed on the forums). If you need to file an issue, please do so in-game and read `HELP ISSUES` and `HELP USINGISSUES`. `HELP ISSUES`: https://www.imperian.com/game-help/?what=customer-service `HELP USINGISSUES`: https://www.imperian.com/game-help/?id=510")
 
 
 # Subscribe to something (such as vote reminders)
@@ -258,13 +258,13 @@ async def sub(ctx, *args):
     """ Subscribe to something. Current options: vote - subscribe to vote reminder PMs """
     if args[0] == "vote":
         if ctx.message.author in lastvote["subscribed"]:
-            await client.send_message(ctx.message.channel, "You're already signed up for vote reminders.")
+            await ctx.send("You're already signed up for vote reminders.")
         else:
             # Add person to the list of folks that get vote reminders
             lastvote["subscribed"].add(ctx.message.author)
             with open("lastvote.pickle", "wb") as fh:
                 pickle.dump(lastvote, fh)
-            await client.send_message(ctx.message.channel, "Ok! You're signed up for vote reminders.")
+            await ctx.send("Ok! You're signed up for vote reminders.")
 
 @client.command(pass_context=True)
 @commands.check(is_botcommands_channel)
@@ -275,9 +275,9 @@ async def unsub(ctx, *args):
             lastvote["subscribed"].discard(ctx.message.author)
             with open("lastvote.pickle", "wb") as fh:
                 pickle.dump(lastvote, fh)
-            await client.send_message(ctx.message.channel, "Ok! You're no longer signed up for vote reminders.")
+            await ctx.send("Ok! You're no longer signed up for vote reminders.")
         else:
-            await client.send_message(ctx.message.channel, "You're not signed up for vote reminders!")
+            await ctx.send("You're not signed up for vote reminders!")
 
 # random utility commands
 @client.command(pass_context=True)
@@ -287,9 +287,9 @@ async def ftoc(ctx, *args):
     try:
         f = int(args[0])
         c = (f - 32) * 5/9
-        await client.send_message(ctx.message.channel, "{} degrees F is {} degrees C".format(f, c))
+        await ctx.send("{} degrees F is {} degrees C".format(f, c))
     except:
-        await client.send_message(ctx.message.channel, "Invalid input.")
+        await ctx.send("Invalid input.")
 
 @client.command(pass_context=True)
 @commands.check(is_botcommands_channel)
@@ -298,9 +298,9 @@ async def ctof(ctx, *args):
     try:
         c = int(args[0])
         f = c * 9/5 + 32
-        await client.send_message(ctx.message.channel, "{} degrees C is {} degrees F".format(c, f))
+        await ctx.send("{} degrees C is {} degrees F".format(c, f))
     except:
-        await client.send_message(ctx.message.channel, "Invalid input.")
+        await ctx.send("Invalid input.")
 
 # fun things
 @client.command(pass_context=True)
@@ -310,9 +310,9 @@ async def corgme(ctx, *args):
     try:
         post = redditfetch.random_from_several(["corgis", "corgi", "corgibutts", "babycorgis", "corgigifs"])
     except Exception as e:
-        await client.send_message(ctx.message.channel, "Exception occurred!")
+        await ctx.send("Exception occurred!")
         return
-    await client.send_message(ctx.message.channel, "__Title__: {}\n{}".format(post.title, post.url))
+    await ctx.send("__Title__: {}\n{}".format(post.title, post.url))
 
 # END COMMAND HANDLERS
 
