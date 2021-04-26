@@ -29,8 +29,6 @@ botcommandid = 616084613588189268
 moderatorchanid = 604743543403053105
 furryfriendschanid = 654713808840818708
 
-lastvote = None
-
 client = commands.Bot(command_prefix="!")
 seennewbies = dict()
 seenids = dict()
@@ -74,14 +72,6 @@ def periodicTasks():
     global seennewbies
     loop = asyncio.get_event_loop()  
     loop.call_later(5, periodicTasks)
-
-    # more than 12 hours since the last vote reminder?
-    if datetime.now() - lastvote["time"] > timedelta(hours=12):
-        for person in lastvote["subscribed"]:
-            asyncio.ensure_future(person.send("You're subscribed for Imperian vote reminders!\nHave you voted for Imperian today? https://imperian.com/vote -- I'll remind you again in 12 hours!"))
-        lastvote["time"] = datetime.now()
-        with open("lastvote.pickle", "wb") as fh:
-            pickle.dump(lastvote, fh)
 
     # Fetch the imperian gamefeed and output it
     outstr = ""
@@ -250,35 +240,6 @@ async def issues(ctx, *args):
     """ Give a reminder about issues """
     await ctx.send("Discussion of issues is not permitted on this discord (just like it isn't allowed on the forums). If you need to file an issue, please do so in-game and read `HELP ISSUES` and `HELP USINGISSUES`. `HELP ISSUES`: https://www.imperian.com/game-help/?what=customer-service `HELP USINGISSUES`: https://www.imperian.com/game-help/?id=510")
 
-
-# Subscribe to something (such as vote reminders)
-@client.command(pass_context=True)
-@commands.check(is_botcommands_channel)
-async def sub(ctx, *args):
-    """ Subscribe to something. Current options: vote - subscribe to vote reminder PMs """
-    if args[0] == "vote":
-        if ctx.message.author in lastvote["subscribed"]:
-            await ctx.send("You're already signed up for vote reminders.")
-        else:
-            # Add person to the list of folks that get vote reminders
-            lastvote["subscribed"].add(ctx.message.author)
-            with open("lastvote.pickle", "wb") as fh:
-                pickle.dump(lastvote, fh)
-            await ctx.send("Ok! You're signed up for vote reminders.")
-
-@client.command(pass_context=True)
-@commands.check(is_botcommands_channel)
-async def unsub(ctx, *args):
-    """ Unsubscribe from something. Current options: vote - subscribe to vote reminder PMs """
-    if args[0] == "vote":
-        if ctx.message.author in lastvote["subscribed"]:
-            lastvote["subscribed"].discard(ctx.message.author)
-            with open("lastvote.pickle", "wb") as fh:
-                pickle.dump(lastvote, fh)
-            await ctx.send("Ok! You're no longer signed up for vote reminders.")
-        else:
-            await ctx.send("You're not signed up for vote reminders!")
-
 # random utility commands
 @client.command(pass_context=True)
 @commands.check(is_botcommands_channel)
@@ -350,21 +311,6 @@ try:
 except Exception as e:
     print("Failed to load seennewbies. Initializing dict.")
     seennewbies = dict()
-
-# load last vote time
-try:
-    with open("lastvote.pickle", "rb") as fh:
-        lastvote = pickle.load(fh)
-        try:
-            lastvote['subscribed']
-        except:
-            # Backwards compat - if lastvote exists but subscribed list doesn't, make it
-            lastvote['subscribed'] = set()
-except Exception as e:
-    print("Failed to load lastvote time. Setting it to 12 hours ago")
-    lastvote = dict()
-    lastvote["time"] = datetime.now() - timedelta(hours=12)
-    lastvote["subscribed"] = set()
 
 loop = asyncio.get_event_loop()
 loop.call_later(5, periodicTasks)
